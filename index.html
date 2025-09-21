@@ -161,30 +161,35 @@
 
   <script>
     function saveTrack() {
-      const file = document.getElementById('fileInput').files[0];
-      const cover = document.getElementById('coverInput').files[0];
-      if (!file) return alert("Nahraj MP3 súbor!");
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file || file.type.indexOf('audio') === -1) {
+        alert("Prosím nahraj platný MP3 súbor.");
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = function(e) {
         const audioData = e.target.result;
         const track = {
-          title: document.getElementById('title').value,
-          artist: document.getElementById('artist').value,
-          album: document.getElementById('album').value,
-          copyright: document.getElementById('copyright').value,
+          title: document.getElementById('title').value || 'Neznámy názov',
+          artist: document.getElementById('artist').value || 'Neznámy interpret',
+          album: document.getElementById('album').value || 'Neznámy album',
+          copyright: document.getElementById('copyright').value || '',
           audio: audioData
         };
 
-        if (cover) {
+        const coverFile = document.getElementById('coverInput').files[0];
+        if (coverFile) {
           const coverReader = new FileReader();
           coverReader.onload = function(ev) {
             track.cover = ev.target.result;
             localStorage.setItem('myTrack', JSON.stringify(track));
             showPlayer(track);
           };
-          coverReader.readAsDataURL(cover);
+          coverReader.readAsDataURL(coverFile);
         } else {
+          track.cover = '';
           localStorage.setItem('myTrack', JSON.stringify(track));
           showPlayer(track);
         }
@@ -212,8 +217,17 @@
 
     (function init() {
       const saved = localStorage.getItem('myTrack');
-      if (saved) showPlayer(JSON.parse(saved));
+      if (saved) {
+        try {
+          const track = JSON.parse(saved);
+          showPlayer(track);
+        } catch {
+          localStorage.removeItem('myTrack');
+        }
+      }
     })();
   </script>
 </body>
 </html>
+
+
