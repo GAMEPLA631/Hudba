@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <title>HUDBA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Favicon priamo v HTML (SVG hudobná nota) -->
+  <link rel="icon" href="data:image/svg+xml,
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+      <rect width='100' height='100' fill='black'/>
+      <text x='50%' y='55%' font-size='60' text-anchor='middle' fill='cyan'>🎵</text>
+    </svg>">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background-image: url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4');
+      background-size: cover;
+      background-position: center;
+      height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+    header::after {
+      content: "";
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.55);
+    }
+    header h1, header p { position: relative; z-index: 2; }
+    header h1 {
+      font-size: 3em;
+      color: #00ffff;
+      text-shadow: 0 0 20px #00ffff;
+    }
+    header p {
+      font-size: 1.2em;
+      max-width: 600px;
+      text-shadow: 0 0 10px #000;
+    }
+    .upload-btn {
+      position: absolute;
+      top: 20px; right: 30px;
+      background: linear-gradient(90deg, #00ffff, #00aaff);
+      color: #000;
+      border: none;
+      padding: 0.6em 1.2em;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 3;
+    }
+    main {
+      flex: 1;
+      padding: 2em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2em;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2em;
+      max-width: 600px;
+      width: 100%;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin: 0.5em 0;
+      padding: 0.8em;
+      border: none;
+      border-radius: 12px;
+      font-size: 1em;
+      background-color: #2a2a2a;
+      color: #fff;
+    }
+    button {
+      background: linear-gradient(90deg, #00ffff, #00aaff);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .player-card {
+      background-color: #1f1f1f;
+      padding: 2em;
+      border-radius: 20px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+    .player-card img {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 16px;
+      margin-bottom: 1em;
+    }
+    .delete-btn {
+      margin-top: 1em;
+      background: linear-gradient(90deg, #ff4d4d, #ff1a1a);
+      color: white;
+      border: none;
+      padding: 0.6em 1.2em;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    footer {
+      text-align: center;
+      padding: 1em;
+      font-size: 0.9em;
+      color: #666;
+      background-color: #111;
+    }
+    .hidden-upload { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>HUDBA</h1>
+    <p>Vytvor si vlastný hudobný svet. Nahraj, počúvaj, ulož.</p>
+    <label class="upload-btn" for="fileInput">🎵 Nahrať audio</label>
+  </header>
+
+  <main>
+    <input type="file" accept="audio/*" id="fileInput" class="hidden-upload">
+
+    <section class="card">
+      <h2>Pridať skladbu</h2>
+      <input type="text" id="title" placeholder="Názov skladby">
+      <input type="text" id="artist" placeholder="Interpret">
+      <input type="text" id="album" placeholder="Album">
+      <input type="file" accept="image/*" id="coverInput">
+      <textarea id="copyright"
+        placeholder="Copyright poznámka"></textarea>
+      <button onclick="saveTrack()">💾 Uložiť skladbu</button>
+    </section>
+
+    <section class="player-card" id="playerArea">
+      <!-- Prehrávač sa zobrazí tu -->
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2025 HUDBA by KRAL. Všetky práva vyhradené.
+  </footer>
+
+  <script>
+    function saveTrack() {
+      const file = document.getElementById('fileInput').files[0];
+      const cover = document.getElementById('coverInput').files[0];
+      if (!file) return alert("Nahraj MP3 súbor!");
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const audioData = e.target.result;
+        const track = {
+          title: document.getElementById('title').value,
+          artist: document.getElementById('artist').value,
+          album: document.getElementById('album').value,
+          copyright: document.getElementById('copyright').value,
+          audio: audioData
+        };
+
+        if (cover) {
+          const coverReader = new FileReader();
+          coverReader.onload = function(ev) {
+            track.cover = ev.target.result;
+            localStorage.setItem('myTrack', JSON.stringify(track));
+            showPlayer(track);
+          };
+          coverReader.readAsDataURL(cover);
+        } else {
+          localStorage.setItem('myTrack', JSON.stringify(track));
+          showPlayer(track);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function showPlayer(track) {
+      const area = document.getElementById('playerArea');
+      area.innerHTML = `
+        ${track.cover ? `<img src="${track.cover}" alt="Obal albumu">` : ''}
+        <h2>${track.title}</h2>
+        <p>${track.artist} – ${track.album}</p>
+        <audio controls src="${track.audio}"></audio>
+        <p><em>${track.copyright}</em></p>
+        <button class="delete-btn" onclick="deleteTrack()">🗑️ Vymazať hudbu</button>
+      `;
+    }
+
+    function deleteTrack() {
+      localStorage.removeItem('myTrack');
+      document.getElementById('playerArea').innerHTML = '';
+      alert("Hudba bola vymazaná.");
+    }
+
+    (function init() {
+      const saved = localStorage.getItem('myTrack');
+      if (saved) showPlayer(JSON.parse(saved));
+    })();
+  </script>
+</body>
+</html>
